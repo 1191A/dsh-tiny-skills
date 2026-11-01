@@ -1,0 +1,10 @@
+# POI 依赖与编译产物，用 fetch.sh 自行获取
+skills/explain-material/scripts/poi/*.jar
+skills/explain-material/scripts/poi/*.class
+
+# 转换产物
+*_ingest/
+images/
+*.pyc
+__pycache__/
+.DS_Store
