@@ -57,7 +57,7 @@ lecture.ppt (123 slides, 4.7 MB)
   → triage               # flag pages whose formulas overlap and cannot be read
   → write per section    # 10 handouts, 800–1500 characters each
   → pack.py              # copy only the 41 figures actually referenced
-  → output folder        # index.md + 10 handouts + images/
+  → <workspace>/讲义/静电学/  # index.md + 10 handouts + images/
 ```
 
 ## Known limits

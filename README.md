@@ -59,7 +59,7 @@ cp -r skills/* ~/.dsh/skills/          # DSH
   → 体检                         # 哪几页式子叠字读不到，先说清楚
   → 按节写讲义                    # 10 节，每节 800–1500 字
   → pack.py                      # 只复制讲义真正引用到的 41 张图
-  → /sdcard/Download/.../讲义/    # 目录.md + 10 份 md + images/
+  → <workspace>/讲义/静电学/      # 目录.md + 10 份 md + images/
 ```
 
 ## 已知限制
