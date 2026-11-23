@@ -8,3 +8,8 @@ images/
 *.pyc
 __pycache__/
 .DS_Store
+
+# pixiv 抓取产物
+out/
+*.epub
+.epub_build/

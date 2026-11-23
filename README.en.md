@@ -1,10 +1,24 @@
-# dsh-study-skills
+# dsh-tiny-skills
 
-Two agent skills for students learning on their own. One turns source material into a readable handout; the other drills the gap between "I understood it" and "I can do it".
+English | [中文](README.md)
 
-Both start from the same observation: **understanding and reproducing are different abilities.** The first runs on recognition, the second on retrieval. Material design and practice design have to treat them separately.
+A handful of small, self-contained agent skills. Each one solves exactly one thing, installs with a `cp`, and needs no framework, no API key, and no thirty pages of reading first.
+
+Three shared principles:
+
+- **The scripts run on their own.** The logic lives in executable scripts; `SKILL.md` explains *when* to use them and *why* they work that way, instead of narrating steps.
+- **No dependencies unless truly needed.** Python standard library first. When an external tool is unavoidable, the docs say what happens without it.
+- **Write down the traps.** API quirks, platform limits, and why the obvious approach does not work are the real value of a skill.
 
 ## Skills
+
+| Skill | What it does | Deps |
+|---|---|---|
+| [`explain-material`](#explain-material--turn-material-into-a-handout) | lecture slides / PDF / video → a handout you can actually read | `python3` (optionally `java`, `poppler-utils`, `ffmpeg`) |
+| [`no-hint-recall`](#no-hint-recall--re-derive-the-problem-yourself) | drills the gap between "I understood it" and "I can do it" | `python3` |
+| [`pixiv-novel-archiver`](#pixiv-novel-archiver--archive-a-pixiv-novel-series) | pixiv novel series → EPUB with illustrations | `python3` (stdlib only) |
+
+---
 
 ### `explain-material` — turn material into a handout
 
@@ -23,51 +37,64 @@ For the case where you have already read the solution and still cannot reproduce
 
 It also produces a "recall card" (five questions plus a 21-day review schedule) so one derivation becomes something you can restart later.
 
+Both start from the same observation: **understanding and reproducing are different abilities.** The first runs on recognition, the second on retrieval.
+
+### `pixiv-novel-archiver` — archive a pixiv novel series
+
+Give it a pixiv novel series URL; it saves every chapter's text, the illustrations referenced in the text at full resolution, the series cover and each chapter's cover — then packages the lot into an EPUB you can drop straight into a phone reader, plus Markdown and a mobile-friendly HTML page.
+
+```bash
+python3 skills/pixiv-novel-archiver/scripts/pixiv_fetch.py \
+  https://www.pixiv.net/novel/series/1280985 -o out
+python3 skills/pixiv-novel-archiver/scripts/pixiv_build.py out --zip
+```
+
+pixiv renders novel pages client-side, so scraping the HTML gets you nothing — the scripts talk to pixiv's own JSON endpoints. Traps baked in:
+
+- the chapter-list endpoint caps `limit` at 10 and **breaks on a `lang` parameter** (400)
+- chapters come back newest-first; they must be re-sorted by `seriesContentOrder`
+- images need `Referer: https://www.pixiv.net/` or they 403
+- covers only exist as `/c/` thumbnails; `/img-original/` is a 404
+- `[pixivimage:id-page]` pages are 1-based while the original files are `_p0`
+
+In the EPUB the series cover becomes the frontispiece, each chapter gets its own cover page, and a cover that repeats across consecutive chapters is collapsed into "封面同前（第 N 话）".
+
 ## Install
 
 ```bash
-git clone <repo> && cd dsh-study-skills
+git clone git@github.com:1191A/dsh-tiny-skills.git
+cd dsh-tiny-skills
 cp -r skills/* ~/.dsh/skills/          # DSH
 # or cp -r skills/* ~/.claude/skills/  # Claude Code
 ```
 
-Skills are plain `SKILL.md` + YAML frontmatter, so both hosts read them.
+Each skill is a directory with `SKILL.md` + YAML frontmatter, which both formats accept.
 
 ## Dependencies
 
-Install only what you need. Missing pieces degrade gracefully and are reported, never silently ignored.
+Install on demand. Missing pieces degrade gracefully and are reported, never silently skipped.
 
-| Purpose | Requirement |
+| Purpose | Dependency |
 |---|---|
-| Base (everything) | `python3` |
-| `.ppt` page rendering | `java` + `bash skills/explain-material/scripts/poi/fetch.sh` |
-| CJK text rendering | a CJK font (e.g. `fonts-noto-cjk`) |
-| PDF | `poppler-utils` (`pdftotext` / `pdftoppm`) |
-| Video frames, audio track | `ffmpeg` |
-| Local speech-to-text | `pip install faster-whisper` |
-| `.docx` / `.xlsx` | built in; `openpyxl` optional for xlsx |
+| Base (everything needs it) | `python3` |
+| `.ppt` slide rendering | `java` + `bash skills/explain-material/scripts/poi/fetch.sh` |
+| CJK text | a CJK font (e.g. `fonts-noto-cjk`) |
+| PDF | `poppler-utils` (`pdftotext`, `pdftoppm`) |
+| Video frames / audio | `ffmpeg` |
+| Local ASR | `pip install faster-whisper` |
+| `.docx` / `.xlsx` | built in; optional `openpyxl` for xlsx |
 
-Jars (~6 MB) are not committed; `fetch.sh` downloads and compiles them.
-
-## A typical run
-
-```
-lecture.ppt (123 slides, 4.7 MB)
-  → ingest.py            # 123 PNGs, text aligned per slide
-  → triage               # flag pages whose formulas overlap and cannot be read
-  → write per section    # 10 handouts, 800–1500 characters each
-  → pack.py              # copy only the 41 figures actually referenced
-  → <workspace>/讲义/静电学/  # index.md + 10 handouts + images/
-```
+No jars are committed under `scripts/poi/` (about 6MB); `fetch.sh` pulls and builds them.
 
 ## Known limits
 
-- `.pptx` is text + embedded media only; page layout is not rendered. Convert to `.ppt` first if you need rendering.
-- Rendering depends on the fonts installed; missing fonts show as boxes.
-- LibreOffice often fails inside a Linux container (`/proc not mounted`), which is why rendering goes through Apache POI + Java AWT instead.
-- The built-in video tool's ASR needs an API key; without one, use local `faster-whisper`.
-- Overlapping text frames in the original file can make a formula unreadable — handouts then say "cannot read this page" rather than guessing.
+- `.pptx` yields text and media only, no layout; convert to `.ppt` if you need rendering.
+- Slide rendering depends on the source fonts — missing fonts become boxes.
+- LibreOffice often fails to start in containers (`/proc not mounted`), hence the Apache POI + Java AWT route.
+- The video tool's ASR needs an API key; without one it falls back to local faster-whisper.
+- Overlapping text boxes occasionally make formulas unreadable; the handout says so instead of guessing.
+- pixiv archiving works on public works only, and will need updating if pixiv changes its endpoints.
 
 ## License
 
-MIT. `skills/explain-material/scripts/poi/` uses Apache POI (Apache License 2.0); its jars are fetched by `fetch.sh` and are not redistributed here.
+MIT. `skills/explain-material/scripts/poi/` uses Apache POI (Apache License 2.0); the jars are fetched by `fetch.sh` and not redistributed here.
