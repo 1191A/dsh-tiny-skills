@@ -251,6 +251,9 @@ def write_epub(book, out_dir):
 
     used = {}
     seen_covers = {}
+    if series.get("cover") and os.path.exists(os.path.join(out_dir, series["cover"])):
+        with open(os.path.join(out_dir, series["cover"]), "rb") as fh:
+            seen_covers[hashlib.md5(fh.read()).hexdigest()] = 0  # 0 = 扉页那张
     for c in chapters:
         o = c["order"]
         blocks = to_blocks(c["content"])
@@ -277,7 +280,9 @@ def write_epub(book, out_dir):
                 h = hashlib.md5(fh.read()).hexdigest()
             if h in seen_covers:
                 # 同一张封面在系列里重复出现时不再贴图，免得连着两页一样
-                cover_html = f'<p class="covernote">封面同前（第{seen_covers[h]}话）</p>'
+                first = seen_covers[h]
+                cover_html = ("" if first == 0
+                              else f'<p class="covernote">封面同前（第{first}话）</p>')
             else:
                 seen_covers[h] = o
                 ext = os.path.splitext(c["cover"])[1]
@@ -293,7 +298,7 @@ def write_epub(book, out_dir):
 <head><meta charset="utf-8"/><title>{esc(c['title'])}</title>
 <link rel="stylesheet" type="text/css" href="style.css"/></head>
 <body>
-<h1>{o}. {esc(c['title'])}</h1>
+<h1>{('' if len(chapters) == 1 else f"{o}. ")}{esc(c['title'])}</h1>
 {cover_html}
 <p class="meta">pixiv: novel/show.php?id={c['id']}</p>
 {('<div class="desc">' + esc(c['description']) + '</div>') if c.get('description') else ''}
