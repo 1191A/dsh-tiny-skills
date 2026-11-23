@@ -14,6 +14,14 @@ python3 scripts/pixiv_fetch.py https://www.pixiv.net/novel/series/1280985 -o out
 python3 scripts/pixiv_build.py out --zip
 ```
 
+单篇作品（不在系列里的短篇）直接给作品链接：
+
+```bash
+python3 scripts/pixiv_fetch.py https://www.pixiv.net/novel/show.php?id=3853774 -o out
+# 只有数字时加 --novel 才按单篇解析，否则按系列 ID 处理
+python3 scripts/pixiv_fetch.py 3853774 --novel -o out
+```
+
 第一条抓数据（写 `out/book.json`、`out/images/`、`out/covers/`），第二条生成成品。脚本只用 Python 标准库，不需要 pip 安装任何东西。
 
 先跑 `fetch`，看一眼 `book.json` 里章节数和正文长度是否合理，再跑 `build`。抓取大约每话 1 张图，几十 MB 是正常的。
@@ -35,6 +43,8 @@ python3 scripts/pixiv_build.py out --zip
 - `[newpage]` —— 分页符
 - `[chapter:标题]` —— 小节标题
 - `[jump:N]` —— 跳转标记，丢掉
+
+单篇作品没有章节列表，`series_content` 接口用不上，直接抓 `/ajax/novel/{id}`，封面取 `coverUrl`（把 `/c/600x600/` 换成 `/c/1200x1200/` 能拿到大图）。
 - `[[rb:汉字 > 假名]]` —— 注音，取汉字
 
 ## 踩过的坑

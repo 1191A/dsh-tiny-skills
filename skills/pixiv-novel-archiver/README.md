@@ -34,6 +34,13 @@ python3 scripts/pixiv_fetch.py 1280985 -o out
 python3 scripts/pixiv_build.py out --zip
 ```
 
+单篇作品也一样，给作品链接就行：
+
+```bash
+python3 scripts/pixiv_fetch.py https://www.pixiv.net/novel/show.php?id=3853774 -o out
+python3 scripts/pixiv_build.py out --zip
+```
+
 产物：
 
 ```
